@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>obrien-mcp-tests</AssemblyName>
+    <RootNamespace>OBrienMcp.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="DecayTests.fs" />
+    <Compile Include="IntegrationTests.fs" />
+    <Compile Include="ToolsTests.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../O-Brien-mcp.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Expecto" Version="10.*" />
+    <PackageReference Include="FsMcp.Testing" Version="1.0.0" />
+  </ItemGroup>
+</Project>

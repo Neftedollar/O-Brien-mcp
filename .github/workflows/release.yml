@@ -49,26 +49,8 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           dotnet pack O-Brien-mcp.fsproj -c Release -o ./nupkg /p:Version="$VERSION"
 
-      - name: Get NuGet trusted publishing token
-        id: nuget-token
-        run: |
-          oidc_token=$(curl -sS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            -H "Accept: application/json;api-version=2.0" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r '.value')
-
-          response=$(curl -sS \
-            -X POST "https://www.nuget.org/api/v2/trustedpublishing/token" \
-            -H "Content-Type: application/json" \
-            -d "{\"oidcToken\": \"${oidc_token}\"}")
-
-          token=$(echo "$response" | jq -r '.token')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
-
       - name: Push to NuGet
-        run: |
-          dotnet nuget push ./nupkg/*.nupkg \
-            --api-key "${{ steps.nuget-token.outputs.token }}" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+        uses: NuGet/publish-action@v1
+        with:
+          packages-directory: ./nupkg
+          skip-duplicate: true

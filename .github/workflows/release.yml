@@ -69,9 +69,9 @@ jobs:
 
           echo "NuGet response: $response"
 
-          token=$(echo "$response" | jq -r '.token // empty')
+          token=$(echo "$response" | jq -r '.token // empty' 2>/dev/null || true)
           if [ -z "$token" ]; then
-            echo "::error::Failed to obtain NuGet token. Response: $response"
+            echo "::error::Failed to obtain NuGet token. Ensure trusted publishing is configured on nuget.org for OBrienMcp (repo: Neftedollar/O-Brien-mcp, workflow: release.yml). Response: $response"
             exit 1
           fi
 

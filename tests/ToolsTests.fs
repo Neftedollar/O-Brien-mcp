@@ -58,18 +58,9 @@ let private dbAvailable =
         with _ -> false
     )
 
-let private ollamaAvailable =
-    lazy (
-        try
-            use c = new System.Net.Http.HttpClient(Timeout = TimeSpan.FromSeconds 2.)
-            c.GetAsync(OBrienMcp.Embeddings.ollamaUrl + "/api/tags").GetAwaiter().GetResult().IsSuccessStatusCode
-        with _ -> false
-    )
+let private skipIfNoDb () = if not dbAvailable.Value then Tests.skiptest "PostgreSQL not available"
 
-let private skipIfNoDb ()     = if not dbAvailable.Value   then Tests.skiptest "PostgreSQL not available"
-let private skipIfNoOllama () = if not ollamaAvailable.Value then Tests.skiptest "Ollama not available"
-
-let private zeroVec : float32[] = Array.zeroCreate 768
+let private zeroVec : float32[] = Array.zeroCreate 384
 let private uid () = Guid.NewGuid().ToString("N")
 let private cleanup ids =
     try OBrienMcp.Db.deleteMany ids |> fun t -> t.GetAwaiter().GetResult() |> ignore
@@ -284,7 +275,7 @@ let tests =
 
         testTask "store: embeds and persists, returns memory JSON" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let content = $"store tool test {uid ()}"
             let! result = call "store" $"""{{ "content": "{content}", "category": "tool_test", "tags": ["t1","t2"] }}"""
             result |> Expect.mcpHasTextContent content "content in response"
@@ -300,7 +291,7 @@ let tests =
 
         testTask "store_batch: stores all memories atomically" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let tag = $"batch-tool-{uid ()}"
             let payload = $"""{{ "memories": [
                 {{ "content": "first {tag}",  "category": "batch_test", "tags": ["{tag}"] }},
@@ -322,7 +313,7 @@ let tests =
 
         testTask "search semantic: finds stored content" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let phrase = $"quantum entanglement phenomena {uid ()}"
             let! result1 = call "store" $"""{{ "content": "{phrase}", "category": "tool_test", "tags": [] }}"""
             let idStr =
@@ -337,7 +328,7 @@ let tests =
 
         testTask "recall: byTopic contains results for the requested topic" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let phrase = $"artificial intelligence deep learning {uid ()}"
             let! vec = OBrienMcp.Embeddings.embed phrase
             let! (mem : OBrienMcp.Domain.Memory) = OBrienMcp.Db.insert phrase "__test__" [||] vec
@@ -349,7 +340,7 @@ let tests =
 
         testTask "update: content change triggers re-embedding" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let! (mem : OBrienMcp.Domain.Memory) = OBrienMcp.Db.insert $"original train {uid ()}" "__test__" [||] zeroVec
             let newContent = $"completely rewritten about cats {uid ()}"
             let! result = call "update" $"""{{ "id": "{mem.Id}", "content": "{newContent}" }}"""

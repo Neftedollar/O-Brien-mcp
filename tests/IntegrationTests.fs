@@ -5,7 +5,7 @@ open Expecto
 open OBrienMcp.Domain
 open OBrienMcp.Db
 
-// ── DB / Ollama availability ──────────────────────────────────────────────────
+// ── DB availability ───────────────────────────────────────────────────────────
 
 let private connStr =
     Environment.GetEnvironmentVariable("DATABASE_URL")
@@ -21,21 +21,11 @@ let private dbAvailable =
         with _ -> false
     )
 
-let private ollamaAvailable =
-    lazy (
-        try
-            use client = new System.Net.Http.HttpClient(Timeout = TimeSpan.FromSeconds 2.)
-            let url = OBrienMcp.Embeddings.ollamaUrl + "/api/tags"
-            client.GetAsync(url).GetAwaiter().GetResult().IsSuccessStatusCode
-        with _ -> false
-    )
-
-let private skipIfNoDb ()     = if not dbAvailable.Value   then Tests.skiptest "PostgreSQL not available"
-let private skipIfNoOllama () = if not ollamaAvailable.Value then Tests.skiptest "Ollama not available"
+let private skipIfNoDb () = if not dbAvailable.Value then Tests.skiptest "PostgreSQL not available"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-let private zeroVec : float32[] = Array.zeroCreate 768
+let private zeroVec : float32[] = Array.zeroCreate 384
 let private noFilter : SearchFilters = { Category = None; Tags = None; After = None; Before = None }
 
 let private cleanup (ids: Guid list) =
@@ -232,11 +222,11 @@ let tests =
             Expect.isTrue found "minStrength=2.0 flags all non-evergreen memories"
         }
 
-        // ── semantic search (needs Ollama) ────────────────────────────────
+        // ── semantic search ───────────────────────────────────────────────
 
         testTask "semanticSearch finds exact content with real embedding" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let phrase = $"the cat sat on the mat {uid ()}"
             let! vec = OBrienMcp.Embeddings.embed phrase
             let! (mem : Memory) = insert phrase "__test__" [||] vec
@@ -251,7 +241,7 @@ let tests =
 
         testTask "hybridSearch combines semantic and keyword signals" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let phrase = $"purple elephant dancing {uid ()}"
             let! vec = OBrienMcp.Embeddings.embed phrase
             let! (mem : Memory) = insert phrase "__test__" [||] vec
@@ -263,7 +253,7 @@ let tests =
 
         testTask "findRelated returns semantically similar memories" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             let! v1 = OBrienMcp.Embeddings.embed "machine learning algorithms for data science"
             let! v2 = OBrienMcp.Embeddings.embed "neural networks and deep learning techniques"
             let! v3 = OBrienMcp.Embeddings.embed "baking chocolate chip cookies recipe"
@@ -363,7 +353,7 @@ let tests =
 
         testTask "hybridSearch RRF: memory matching both signals ranks higher" {
             skipIfNoDb ()
-            skipIfNoOllama ()
+            skipIfNoDb ()
             // m1: unique keyword hit + strong semantic signal (real embedding of phrase)
             // m2: semantic signal only (zero vector has no real similarity, but appears via keyword in phrase)
             // m3: keyword only

@@ -15,8 +15,6 @@ let private buildServer () =
 let main _ =
     // Redirect .NET logs to stderr so stdout stays clean for MCP protocol
     Console.Error.WriteLine("[obrien-mcp] starting up…")
-    Console.Error.WriteLine($"[obrien-mcp] embedding model : {Embeddings.embeddingModel}")
-    Console.Error.WriteLine($"[obrien-mcp] ollama url      : {Embeddings.ollamaUrl}")
 
     task {
         try

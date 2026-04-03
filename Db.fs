@@ -21,7 +21,7 @@ let private embeddingDim =
     Environment.GetEnvironmentVariable("EMBEDDING_DIM")
     |> Option.ofObj
     |> Option.bind (fun s -> match Int32.TryParse(s) with true, v -> Some v | _ -> None)
-    |> Option.defaultValue 768
+    |> Option.defaultValue 384
 
 let private halfLife =
     Environment.GetEnvironmentVariable("MEMORY_DECAY_HALF_LIFE")

@@ -12,7 +12,7 @@
     <ToolCommandName>obrien-mcp</ToolCommandName>
     <PackageId>OBrienMcp</PackageId>
     <Version>1.0.0</Version>
-    <Description>Semantic memory MCP server — PostgreSQL + pgvector + Ollama embeddings</Description>
+    <Description>Semantic memory MCP server — PostgreSQL + pgvector + built-in ONNX embeddings (all-MiniLM-L6-v2)</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Domain.fs" />
@@ -26,5 +26,7 @@
     <PackageReference Include="FsMcp.Server" Version="1.0.0" />
     <PackageReference Include="Npgsql" Version="9.*" />
     <PackageReference Include="Pgvector" Version="0.*" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.*" />
+    <PackageReference Include="FastBertTokenizer" Version="1.*" />
   </ItemGroup>
 </Project>

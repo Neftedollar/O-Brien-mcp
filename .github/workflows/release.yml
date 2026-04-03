@@ -49,38 +49,12 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           dotnet pack O-Brien-mcp.fsproj -c Release -o ./nupkg /p:Version="$VERSION"
 
-      - name: Get NuGet trusted publishing token
-        id: nuget-token
-        run: |
-          oidc_token=$(curl -sSf \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            -H "Accept: application/json;api-version=2.0" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget.org" | jq -r '.value')
-
-          if [ -z "$oidc_token" ] || [ "$oidc_token" = "null" ]; then
-            echo "::error::Failed to obtain GitHub OIDC token"
-            exit 1
-          fi
-
-          response=$(curl -sS \
-            -X POST "https://www.nuget.org/api/v2/trustedpublishing/token" \
-            -H "Content-Type: application/json" \
-            -d "{\"oidcToken\": \"${oidc_token}\"}")
-
-          echo "NuGet response: $response"
-
-          token=$(echo "$response" | jq -r '.token // empty' 2>/dev/null || true)
-          if [ -z "$token" ]; then
-            echo "::error::Failed to obtain NuGet token. Ensure trusted publishing is configured on nuget.org for OBrienMcp (repo: Neftedollar/O-Brien-mcp, workflow: release.yml). Response: $response"
-            exit 1
-          fi
-
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: NuGet login (trusted publishing)
+        uses: NuGet/login@v1
 
       - name: Push to NuGet
         run: |
           dotnet nuget push ./nupkg/*.nupkg \
-            --api-key "${{ steps.nuget-token.outputs.token }}" \
+            --api-key "${{ env.NUGET_API_KEY }}" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate

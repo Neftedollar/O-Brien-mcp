@@ -18,7 +18,9 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Restore
-        run: dotnet restore tests/O-Brien-mcp.Tests.fsproj --ignore-failed-sources
+        run: |
+          dotnet nuget remove source local-fsmap || true
+          dotnet restore tests/O-Brien-mcp.Tests.fsproj
 
       - name: Unit tests (no DB / Ollama required)
         run: dotnet run --project tests -- --filter "O-Brien-mcp.calculateStrength"
@@ -38,7 +40,9 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Restore
-        run: dotnet restore O-Brien-mcp.fsproj --ignore-failed-sources
+        run: |
+          dotnet nuget remove source local-fsmap || true
+          dotnet restore O-Brien-mcp.fsproj
 
       - name: Pack
         run: |

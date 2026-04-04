@@ -29,9 +29,15 @@ let private http = lazy (new HttpClient(Timeout = TimeSpan.FromMinutes(10.)))
 
 let private downloadFile (url: string) (dest: string) =
     task {
-        use! stream = http.Value.GetStreamAsync(url)
-        use file = File.Create(dest)
-        do! stream.CopyToAsync(file)
+        let tmp = dest + ".tmp"
+        try
+            use! stream = http.Value.GetStreamAsync(url)
+            use file = File.Create(tmp)
+            do! stream.CopyToAsync(file)
+            File.Move(tmp, dest, overwrite = true)
+        with ex ->
+            if File.Exists(tmp) then File.Delete(tmp)
+            raise ex
     }
 
 let private ensureFiles () =
@@ -71,7 +77,7 @@ let private l2Normalize (v: float32[]) =
 
 // ── Singleton model ───────────────────────────────────────────────────────────
 
-let private loadedModel : Task<BertTokenizer * InferenceSession> =
+let private loadModel () =
     task {
         do! ensureFiles()
         let tokenizer = BertTokenizer()
@@ -80,11 +86,24 @@ let private loadedModel : Task<BertTokenizer * InferenceSession> =
         return tokenizer, session
     }
 
+let private modelRef = ref (loadModel())
+
+let private getModel () : Task<BertTokenizer * InferenceSession> =
+    task {
+        let t = modelRef.Value
+        if t.IsFaulted || t.IsCanceled then
+            let fresh = loadModel()
+            modelRef.Value <- fresh
+            return! fresh
+        else
+            return! t
+    }
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 let embed (text: string) : Task<float32[]> =
     task {
-        let! tokenizer, session = loadedModel
+        let! tokenizer, session = getModel()
         let struct (inputIds, attMask, tokenTypeIds) = tokenizer.Encode(text, 256, Nullable())
 
         let seqLen = inputIds.Length
@@ -97,7 +116,7 @@ let embed (text: string) : Task<float32[]> =
             NamedOnnxValue.CreateFromTensor("token_type_ids", mkTensor tokenTypeIds)
         ]
 
-        use results = session.Run(inputs)
+        use results = session.Run(inputs, [| "last_hidden_state" |])
         let lhs = (Seq.head results).AsTensor<float32>() |> Seq.toArray
 
         return lhs |> meanPool <| attMask <| seqLen |> l2Normalize

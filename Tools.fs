@@ -359,11 +359,9 @@ let pruneTool =
                        strength = c.Strength
                        reason   = c.Reason |})
 
-            let pruned =
-                if dryRun then 0
-                else
-                    Db.deleteMany (candidates |> List.map (fun c -> c.Memory.Id))
-                    |> _.GetAwaiter().GetResult()
+            let! pruned =
+                if dryRun then Task.FromResult(0)
+                else Db.deleteMany (candidates |> List.map (fun c -> c.Memory.Id))
 
             return Ok [Content.text (toJson {|
                 pruned     = pruned

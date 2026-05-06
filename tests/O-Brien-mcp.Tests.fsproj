@@ -15,7 +15,8 @@
     <ProjectReference Include="../O-Brien-mcp.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="10.1.*" />
     <PackageReference Include="Expecto" Version="10.*" />
-    <PackageReference Include="FsMcp.Testing" Version="1.1.1" />
+    <PackageReference Include="FsMcp.Testing" Version="1.1.*" />
   </ItemGroup>
 </Project>

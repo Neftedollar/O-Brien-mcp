@@ -22,8 +22,8 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FsMcp.Core" Version="1.0.0" />
-    <PackageReference Include="FsMcp.Server" Version="1.0.0" />
+    <PackageReference Include="FsMcp.Core" Version="1.1.1" />
+    <PackageReference Include="FsMcp.Server" Version="1.1.1" />
     <PackageReference Include="Npgsql" Version="9.*" />
     <PackageReference Include="Pgvector" Version="0.*" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.*" />

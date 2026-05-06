@@ -16,6 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Expecto" Version="10.*" />
-    <PackageReference Include="FsMcp.Testing" Version="1.0.0" />
+    <PackageReference Include="FsMcp.Testing" Version="1.1.1" />
   </ItemGroup>
 </Project>
